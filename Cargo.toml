@@ -1,0 +1,10 @@
+[package]
+name = "shipping-tax-recon"
+version = "0.1.0"
+edition = "2021"
+description = "Split a Shopify invoice's consolidated shipping subtotal into per-province subtotals that reproduce the charged taxes"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+pdf-extract = "0.12.1"
+regex = "1.13.1"
