@@ -23,7 +23,9 @@ cargo run -- --subtotal 82.17 --total 88.55 --tax GST=3.55 --tax ON=1.46 --tax Q
   Override a rate with `CODE=AMOUNT@RATE`, e.g. `NS=1.40@14`.
 - `--format csv` for spreadsheet import; one row per bucket per bill, with an `invoice` column.
 - `--slack-cents N` if the solver reports no solution because Shopify rounded tax per shipment.
-- `--allow-untaxed` if part of the subtotal had no tax at all (e.g. international labels).
+- Any part of the subtotal the tax lines can't account for is reported as an
+  "Untaxed" row (e.g. international labels). Pass `--no-untaxed` to treat that
+  as an error instead.
 
 ## How it works
 

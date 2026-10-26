@@ -156,7 +156,7 @@ pub fn reconcile(inv: &Invoice) -> Result<Reconciliation, String> {
     if untaxed > 0 && !inv.allow_untaxed {
         return Err(format!(
             "the charged taxes cover a subtotal of at most {}, leaving {} with no tax. \
-             If some shipments are untaxed (e.g. international), pass --allow-untaxed{}",
+             Drop --no-untaxed if some shipments are untaxed (e.g. international){}",
             format_money(max_taxed),
             format_money(untaxed),
             slack_hint(inv)
@@ -211,7 +211,7 @@ pub fn reconcile(inv: &Invoice) -> Result<Reconciliation, String> {
             provincial: 0,
         });
     }
-    if inv.allow_untaxed {
+    if untaxed > 0 {
         rows.push(Row {
             label: "Untaxed".into(),
             kind: RowKind::Untaxed,
@@ -332,13 +332,21 @@ mod tests {
     }
 
     #[test]
-    fn leftover_requires_allow_untaxed() {
+    fn leftover_is_untaxed_unless_disallowed() {
         let inv = Invoice { subtotal: 9000, total: None, ..sample() };
-        assert!(reconcile(&inv).unwrap_err().contains("--allow-untaxed"));
+        assert!(reconcile(&inv).unwrap_err().contains("--no-untaxed"));
         let inv = Invoice { allow_untaxed: true, ..inv };
         let rec = reconcile(&inv).unwrap();
         assert_reconciles(&inv, &rec);
-        assert!(rec.rows.last().unwrap().subtotal > 0);
+        let last = rec.rows.last().unwrap();
+        assert_eq!((last.kind.clone(), last.subtotal), (RowKind::Untaxed, 9000 - 8235));
+    }
+
+    #[test]
+    fn no_untaxed_row_when_everything_is_taxed() {
+        let inv = Invoice { allow_untaxed: true, ..sample() };
+        let rec = reconcile(&inv).unwrap();
+        assert!(rec.rows.iter().all(|r| r.kind != RowKind::Untaxed));
     }
 
     #[test]

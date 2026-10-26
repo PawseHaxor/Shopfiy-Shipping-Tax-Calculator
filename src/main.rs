@@ -39,9 +39,10 @@ struct Cli {
     #[arg(long, default_value_t = 0)]
     slack_cents: Cents,
 
-    /// Allow part of the subtotal to carry no tax (e.g. international shipments).
+    /// Require the whole subtotal to be taxed. By default any part the tax
+    /// lines can't account for is reported as untaxed (e.g. international shipments).
     #[arg(long)]
-    allow_untaxed: bool,
+    no_untaxed: bool,
 
     #[arg(long, value_enum, default_value_t = Format::Table)]
     format: Format,
@@ -123,7 +124,7 @@ fn main() {
     for (i, (label, invoice)) in inputs.iter().enumerate() {
         let result = invoice.clone().and_then(|mut inv| {
             inv.slack = cli.slack_cents;
-            inv.allow_untaxed = cli.allow_untaxed;
+            inv.allow_untaxed = !cli.no_untaxed;
             reconcile(&inv).map(|rec| (inv, rec))
         });
         match (result, cli.format) {
